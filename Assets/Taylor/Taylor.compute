@@ -1,0 +1,83 @@
+﻿#pragma kernel Sin
+#pragma kernel Log
+
+RWTexture2D<float4> _Result;
+
+cbuffer cb {
+	int _Num;
+	int _Width;
+	int _Height;
+	float _Range;
+};
+
+float factorial(int n) {
+	float result = 1;
+	for (int i = 1; i <= n; i++) {
+		result *= i;
+	}
+	return result;
+}
+
+float pow(float x, int n) {
+	float result = 1;
+	[unroll(50)]
+	for (int i = 0; i<n; i++) {
+		result *= x;
+	}
+	return result;
+}
+
+float CalcSin(int count, float x) {
+	float result = 0;
+	[unroll(50)]
+	for (int n = 0; n <= count; n++) {
+		float result1 = pow(-1, n) * pow(x, 2 * n + 1) / factorial(2 * n + 1);
+		result += result1;
+	}
+	return result;
+}
+
+void Draw(uint2 id) {
+	if (0 < id.y && id.y < _Height) {
+		_Result[id] = float4(1, 0, 0, 1);
+		_Result[id + int2(0, 1)] = float4(1, 0, 0, 1);
+		_Result[id + int2(0, -1)] = float4(1, 0, 0, 1);
+		_Result[id + int2(-1, 1)] = float4(1, 0, 0, 1);
+		_Result[id + int2(1, 1)] = float4(1, 0, 0, 1);
+		_Result[id + int2(-1, 0)] = float4(1, 0, 0, 1);
+		_Result[id + int2(1, 0)] = float4(1, 0, 0, 1);
+		_Result[id + int2(-1, -1)] = float4(1, 0, 0, 1);
+		_Result[id + int2(1, -1)] = float4(1, 0, 0, 1);
+	}
+}
+
+[numthreads(32, 32, 1)]
+void Sin (uint3 id : SV_DispatchThreadID) {
+
+	_Result[id.xy] = float4(0,0,0,0);
+
+	float x = (float)(id.x * _Range / _Width);
+
+	int2 nid = int2(id.x, (int)(sin(x) * _Height * 0.5 + _Height * 0.5));
+	_Result[nid] = float4(0,0,1,1);
+
+	nid = int2(id.x, (int)(CalcSin(_Num, x) * _Height * 0.5 + _Height * 0.5));
+	Draw(nid);
+	
+}
+
+
+[numthreads(32, 32, 1)]
+void Log(uint3 id : SV_DispatchThreadID) {
+
+	_Result[id.xy] = float4(0, 0, 0, 0);
+
+	float x = (float)(id.x * _Range / _Width);
+
+	int2 nid = int2(id.x, (int)(cos(x) * _Height * 0.5 + _Height * 0.5));
+	_Result[nid] = float4(0, 0, 1, 1);
+
+	/*nid = int2(id.x, (int)(CalcSin(_Num, x) * _Height * 0.5 + _Height * 0.5));
+	Draw(nid);*/
+
+}

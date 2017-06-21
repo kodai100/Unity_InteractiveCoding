@@ -1,0 +1,41 @@
+﻿#pragma kernel Update
+
+#define SIMULATION_BLOCK_SIZE 32
+#define EPSILON 5e-4
+
+struct Particle {
+	float2 pos;
+	float2 vel;
+	float2 force;
+	float mass;
+};
+
+StructuredBuffer<Particle> _ParticlesBufferRead;
+RWStructuredBuffer<Particle> _ParticlesBufferWrite;
+
+cbuffer cb {
+	float _G;
+	float _SolarMass;
+	float _DT;
+	int _NumParticles;
+};
+
+[numthreads(SIMULATION_BLOCK_SIZE,1,1)]
+void Update (uint3 DTid : SV_DispatchThreadID) {
+
+	uint id = DTid.x;
+	Particle p = _ParticlesBufferRead[id];
+
+	float2 tmpForce = p.force;
+	for (int j = 0; j < _NumParticles; j++) {
+		if (id == j) continue;
+		Particle n = _ParticlesBufferRead[j];
+		float dist = distance(p.pos, n.pos);
+		float f = (_G * p.mass * n.mass) / (dist*dist + EPSILON*EPSILON);
+		tmpForce += f * normalize(n.pos - p.pos) / dist;
+	}
+
+	_ParticlesBufferWrite[id].force = tmpForce;
+	_ParticlesBufferWrite[id].vel = p.vel + _DT * p.force / p.mass;
+	_ParticlesBufferWrite[id].pos = p.pos + _DT * p.vel;
+}
