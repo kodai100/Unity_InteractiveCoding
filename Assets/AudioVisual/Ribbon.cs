@@ -26,15 +26,14 @@ namespace Kodai.Audio.Ribbon {
         void Update() {
 
             Vector3[] v = new Vector3[manager.band * 2];
-            for(int i = 0; i<manager.band; i+=2) {
-                v[i] = new Vector3(0.2f * i, Manager.audioData[id][i] * 30 * Mathf.Pow(manager.decay, id) + 0.3f, transform.position.z);
-                v[i + 1] = new Vector3(0.2f * i, Manager.audioData[id][i] * 30 * Mathf.Pow(manager.decay, id) - 0.3f, transform.position.z);
+            for(int i = 0; i<manager.band; i++) {
+                v[2*i] = new Vector3((204.8f / (float)manager.band) * i, Manager.audioData[id][i] * 30 * Mathf.Pow(manager.decay, id) + 0.3f, transform.position.z);
+                v[2*i + 1] = new Vector3((204.8f / (float)manager.band) * i, Manager.audioData[id][i] * 30 * Mathf.Pow(manager.decay, id) - 0.3f, transform.position.z);
             }
             mesh.vertices = v;
 
-            int[] idx = new int[manager.band * 2 * 3];
-            int count = 0;
-            for(int i = 0; i<manager.band - 1; i++) {
+            int[] idx = new int[(manager.band - 1) * 6];
+            for(int i = 0, count = 0; i<manager.band - 1; i++) {
                 idx[count] = 2 * i;
                 idx[count + 1] = 2 * i + 3;
                 idx[count + 2] = 2 * i + 1;
@@ -45,6 +44,7 @@ namespace Kodai.Audio.Ribbon {
             }
             mesh.SetIndices(idx, MeshTopology.Triangles, 0);
             mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
 
         }
         
