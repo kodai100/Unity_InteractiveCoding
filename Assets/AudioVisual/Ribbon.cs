@@ -9,6 +9,7 @@ namespace Kodai.Audio.Ribbon {
     [RequireComponent(typeof(MeshRenderer))]
     public class Ribbon : MonoBehaviour {
 
+        public Manager manager;
         public int id;
 
         public Material mat;
@@ -24,16 +25,16 @@ namespace Kodai.Audio.Ribbon {
         
         void Update() {
 
-            Vector3[] v = new Vector3[1024 * 2];
-            for(int i = 0; i<1024; i+=2) {
-                v[i] = new Vector3(0.2f * i, Manager.audioData[id][i] * 30 + 0.3f, transform.position.z);
-                v[i + 1] = new Vector3(0.2f * i, Manager.audioData[id][i] * 30 - 0.3f, transform.position.z);
+            Vector3[] v = new Vector3[manager.band * 2];
+            for(int i = 0; i<manager.band; i+=2) {
+                v[i] = new Vector3(0.2f * i, Manager.audioData[id][i] * 30 * Mathf.Pow(manager.decay, id) + 0.3f, transform.position.z);
+                v[i + 1] = new Vector3(0.2f * i, Manager.audioData[id][i] * 30 * Mathf.Pow(manager.decay, id) - 0.3f, transform.position.z);
             }
             mesh.vertices = v;
 
-            int[] idx = new int[1024 * 2 * 3];
+            int[] idx = new int[manager.band * 2 * 3];
             int count = 0;
-            for(int i = 0; i<1023; i++) {
+            for(int i = 0; i<manager.band - 1; i++) {
                 idx[count] = 2 * i;
                 idx[count + 1] = 2 * i + 3;
                 idx[count + 2] = 2 * i + 1;
